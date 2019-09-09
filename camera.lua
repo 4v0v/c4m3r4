@@ -1,7 +1,6 @@
 -------------------------------
--- Based on "classic" by kikito : https://github.com/kikito/gamera && "STALKER-X" by adnzzzzZ : https://github.com/adnzzzzZ/STALKER-X
 -- MIT License
--- Copyright (c) 2018, 4v0v
+-- Copyright (c) 2019, 4v0v
 -------------------------------
 
 local Camera = {}
@@ -34,13 +33,11 @@ function Camera:__call()
 		}
 		obj.smooth, obj.rot_smooth, obj.scale_smooth = 5, 5, 5
 		obj.linear, obj.rot_linear, obj.scale_linear = 700, 200, 1
-		obj.mode, obj.rot_mode, obj.scale_mode       = "default", "default", "default"
+		obj.mode  , obj.rot_mode  , obj.scale_mode   = "default", "default", "default"
 		obj.shaking = {
 			shaking = 0,
 			rot     = 0,
-			zoom    = 0,
-			shear_x = 0,
-			shear_y = 0
+			zoom    = 0
 		}
     return setmetatable(obj, {__index = Camera})
 end
@@ -61,8 +58,6 @@ function Camera:update(dt)
     if math.abs(self.shaking["shaking"]) > 5   then self.shaking["shaking"] = _smooth(self.shaking["shaking"], 0, 5, dt) else self.shaking["shaking"] = 0 end
     if math.abs(self.shaking["rot"]    ) > 0.1 then self.shaking["rot"]     = _smooth(self.shaking["rot"], 0, 5, dt)     else self.shaking["rot"]     = 0 end
     if math.abs(self.shaking["zoom"]   ) > 0.1 then self.shaking["zoom"]    = _smooth(self.shaking["zoom"], 0, 5, dt)    else self.shaking["zoom"]    = 0 end
-    if math.abs(self.shaking["shear_x"]) > 0.1 then self.shaking["shear_x"] = _smooth(self.shaking["shear_x"], 0, 5, dt) else self.shaking["shear_x"] = 0 end
-    if math.abs(self.shaking["shear_y"]) > 0.1 then self.shaking["shear_y"] = _smooth(self.shaking["shear_y"], 0, 5, dt) else self.shaking["shear_y"] = 0 end
 end
 
 function Camera:draw(func)
@@ -70,10 +65,9 @@ function Camera:draw(func)
     lg.translate(self.cx, self.cy)
     lg.rotate(math.rad(self.r + (math.random()-.5)*self.shaking["rot"]))
     lg.scale(self.s + (math.random()-.5)*self.shaking["zoom"])
-    lg.shear(self.sh["x"] + (math.random()-.5)*self.shaking["shear_x"], self.sh["y"] + (math.random()-.5)*self.shaking["shear_y"])
     lg.translate(-self.x, -self.y)
     lg.translate((math.random()-.5)*self.shaking["shaking"], (math.random()-.5)*self.shaking["shaking"])
-            func()
+        func()
     lg.pop()
 end
 
@@ -91,14 +85,7 @@ function Camera:set_zoom_mode(mode) self.scale_mode = mode or "default"; return 
 
 -------------------------------
 
-function Camera:shake(s, r, z, sx, sy)
-    self.shaking["shaking"] = s or 0
-    self.shaking["rot"]     = r or 0
-    self.shaking["zoom"]    = z or 0
-    self.shaking["shear_x"] = sx or 0
-    self.shaking["shear_y"] = sy or 0
-    return self
-end
+function Camera:shake(s, r, z) self.shaking["shaking"], self.shaking["rot"], self.shaking["zoom"] = s or 0 ,r or 0 ,z or 0 return self end
 function Camera:move_to(x, y) self.target["x"], self.target["y"] = x, y; return self end
 function Camera:rotate_to(r) self.target["r"] = r; return self end
 function Camera:zoom_to(s) self.target["s"] = s; return self end
@@ -115,6 +102,7 @@ function Camera:get_position() return self.x, self.y end
 -- 	x, y = c*x - s*y, s*x + c*y
 -- 	return x*self.scale + self.w/2, y*self.scale + self.h/2
 -- end
+
 function Camera:cam_to_world(x, y)
     local c, s = math.cos(math.rad(-self.r)), math.sin(math.rad(-self.r))
     x, y = (x - self.w/2)/self.s, (y - self.h/2)/self.s
