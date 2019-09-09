@@ -1,2 +1,2 @@
 # camera
-camera module for Löve
+simple camera module for Löve with screenshake support
