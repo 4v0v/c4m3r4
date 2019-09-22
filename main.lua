@@ -6,15 +6,20 @@ function love.load()
     W, H = love.graphics.getDimensions()
     worldmap = lg.newImage("world.png")
 
-    cam1 = Camera:new(0, 0, W/2, H, 0, 0.5)
-    cam2 = Camera:new(W/2, 0, W/2, H/2, 0.2, 1)
+    cam2 = Camera:new(0, 0, W/2, H, 0, 0.5)
+    cam1 = Camera:new(W/2, 0, W/2, H/2, 0.2, 1)
     cam3 = Camera:new(W/2,  H/2, W/2, H/2, 0.2, 0.2)
 end
 
 function love.update(dt)
+    cam1:update(dt)
+    cam2:update(dt)
+    cam3:update(dt)
 
-    if love.keyboard.isDown("left") then cam1:move(-10 , 0) end
-    if love.keyboard.isDown("right") then cam1:move(10 , 0) end
+    if love.keyboard.isDown("left")  then cam1:move(-10 , 0) end
+    if love.keyboard.isDown("right") then cam1:move(10 , 0) end    
+    if love.keyboard.isDown("up")    then cam1:move(0, 10) end
+    if love.keyboard.isDown("down")  then cam1:move(0, -10) end
 
     if love.keyboard.isDown("a") then cam1:zoom(0.01) end
     if love.keyboard.isDown("q") then cam1:zoom(-0.01) end
@@ -27,6 +32,9 @@ function love.draw()
     cam1:draw(draw_func)
     cam2:draw(draw_func)
     cam3:draw(draw_func)
+
+    lg.print(cam1:getX() .. "\n" .. cam1:getY())
+
 end
 
 
