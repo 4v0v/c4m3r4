@@ -1,7 +1,7 @@
-local Camera, lg = {}, love.graphics
+local Camera, lg, rand = {}, love.graphics, love.math.random
 
 local function _smooth(a, b, s, dt) return a + (b - a) * (1.0 - math.exp(-s * dt)) end
-local function _linear(x,y, s, dt) local d = math.sqrt(x*x+y*y); if d > 0 then x,y = x/d, y/d end; return x * math.min(s * 100 * dt, d), y * math.min(s * 100 * dt, d) end
+local function _rand(x) return love.math.noise(love.math.random()) - 0.5 end
 
 function Camera:new(x, y, w, h, r, s)
     local obj = {}
@@ -11,26 +11,16 @@ function Camera:new(x, y, w, h, r, s)
         obj.h = h
         obj.r = r or 0
         obj.s = s or 1
-        obj.cam = { x = 0, y = 0, r = r or 0, s = s or 1, tx = 0, ty = 0, ts = s or 1, m = "default", sm = "default", lv = 10, sv = 10, ssv = 10 }
+        obj.cam = { x = 0, y = 0, r = r or 0, s = s or 1, tx = 0, ty = 0, ts = s or 1, m = "default", sm = "default", sv = 10, ssv = 10 }
         obj.shk = { s = 0, r = 0, z = 0 }
     return setmetatable(obj, {__index = Camera})
 end
 
 function Camera:update(dt)
-    if self.cam.m == "default" then 
-        self.cam.x, self.cam.y = self.cam.tx, self.cam.ty
-    elseif self.cam.m == "smooth" then 
-        self.cam.x, self.cam.y = _smooth(self.cam.x, self.cam.tx, self.cam.sv, dt), _smooth(self.cam.y, self.cam.ty, self.cam.sv, dt)
-    elseif self.cam.m == "linear" then 
-        local _x, _y =  _linear(self.cam.tx - self.cam.x, self.cam.ty - self.cam.y, self.cam.lv, dt); self.cam.x, self.cam.y = self.cam.x + _x, self.cam.y + _y
-    end
-
-    if self.cam.sm == "default" then
-        self.cam.s = self.cam.ts
-    elseif self.cam.sm == "smooth" then 
-        self.cam.ts = _smooth(self.cam.s, self.cam.ts, self.cam.ssv, dt)
-    end
-
+    if     self.cam.m == "default"  then self.cam.x, self.cam.y = self.cam.tx, self.cam.ty
+    elseif self.cam.m == "smooth"   then self.cam.x, self.cam.y = _smooth(self.cam.x, self.cam.tx, self.cam.sv, dt), _smooth(self.cam.y, self.cam.ty, self.cam.sv, dt) end
+    if     self.cam.sm == "default" then self.cam.s = self.cam.ts
+    elseif self.cam.sm == "smooth"  then self.cam.s = _smooth(self.cam.s, self.cam.ts, self.cam.ssv, dt) end
     if math.abs(self.shk.s) > 5   then self.shk.s = _smooth(self.shk.s, 0, 5, dt) else self.shk.s = 0 end
     if math.abs(self.shk.r) > 0.1 then self.shk.r = _smooth(self.shk.r, 0, 5, dt) else self.shk.r = 0 end
     if math.abs(self.shk.z) > 0.1 then self.shk.z = _smooth(self.shk.z, 0, 5, dt) else self.shk.z = 0 end
@@ -41,10 +31,10 @@ function Camera:draw(func)
     lg.setScissor(self.x, self.y, self.w, self.h)
     lg.push()
     lg.translate(cx, cy)
-    lg.scale(self.cam.s + (math.random()-.5)*self.shk.z)
-    lg.rotate(self.cam.r + (math.random()-.5)*self.shk.r)
+    lg.scale(self.cam.s + _rand()*self.shk.z)
+    lg.rotate(self.cam.r + _rand()*self.shk.r)
     lg.translate(-self.cam.x, -self.cam.y)
-    lg.translate((math.random()-.5)*self.shk.s, (math.random()-.5)*self.shk.s)
+    lg.translate(_rand()*self.shk.s, _rand()*self.shk.s)
         func()
         lg.circle("line", self.cam.tx, self.cam.ty, 10)
         lg.line(self.cam.tx - 10, self.cam.ty, self.cam.tx + 10, self.cam.ty)
@@ -60,9 +50,10 @@ end
 
 function Camera:shake(s, r, z) self.shk.s, self.shk.r, self.shk.z = s or 0 ,r or 0 ,z or 0 end
 function Camera:attach(x, y) self.cam.tx, self.cam.ty = x or self.cam.tx, y or self.cam.ty end
-function Camera:zoom(s) self.ts = s end
+function Camera:zoom(s) self.cam.ts = s end
 
-function Camera:getPosition() return self.cam.x, self.cam.y, self.cam.tx, self.cam.ty end
+function Camera:getPosition() return self.cam.x, self.cam.y end
+function Camera:getTargetPosition() return self.cam.tx, self.cam.ty end
 function Camera:getX() return self.cam.x end
 function Camera:getY() return self.cam.y end
 function Camera:getTargetX() return self.cam.tx end
@@ -77,7 +68,7 @@ function Camera:setScale(s) self.cam.s, self.cam.ts = s, s end
 function Camera:setAngle(r) self.cam.r = r end
 function Camera:setMode(m) self.cam.m = m end
 function Camera:setScaleMode(m) self.cam.sm = m end
-function Camera:setPosition(x, y) self.cam.x, self.cam.tx = x or self.cam.x, x or self.cam.tx; self.cam.y, self.cam.ty = y or self.cam.y, y or self.cam.ty end
+function Camera:setPosition(x, y) self.cam.x, self.cam.tx, self.cam.y, self.cam.ty = x or self.cam.x, x or self.cam.tx, y or self.cam.y, y or self.cam.ty end
 function Camera:setX(x) self.cam.x, self.cam.tx = x or self.cam.x, x or self.cam.tx end
 function Camera:setY(y) self.cam.y, self.cam.ty = y or self.cam.y, y or self.cam.ty end
 

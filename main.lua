@@ -15,6 +15,8 @@ function love.load()
 end
 
 function love.update(dt)
+    -- dt = dt * 0.5
+
     cam1:update(dt)
     cam2:update(dt)
     cam3:update(dt)
@@ -45,7 +47,7 @@ function love.draw()
     cam2:draw(draw_func)
     cam3:draw(draw_func)
 
-    lg.print(cam1:getX() .. "\n" .. cam1:getY())
+    lg.print(cam1:getX() .. "\n" .. cam1:getY().. "\n" .. cam1:getScale())
 end
 
 
