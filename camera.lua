@@ -19,11 +19,11 @@ function Camera:new(x, y, w, h, r, s)
             tx = 0,
             ty = 0,
         }
-
-        obj.cam_x = 0
-        obj.cam_y = 0
-        obj.cam_target_x = 0
-        obj.cam_target_y = 0
+        obj.shk = {
+            s = 0,
+            r = 0,
+            z = 0
+        }
     return setmetatable(obj, {__index = Camera})
 end
 
@@ -33,6 +33,10 @@ function Camera:update(dt)
 
     self.cam.x = _smooth(self.cam.x, self.cam.tx, 10, dt)
     self.cam.y = _smooth(self.cam.y, self.cam.ty, 10, dt)
+
+    if math.abs(self.shk.s) > 5   then self.shk.s = _smooth(self.shk.s, 0, 5, dt) else self.shk.s = 0 end
+    if math.abs(self.shk.r) > 0.1 then self.shk.r = _smooth(self.shk.r, 0, 5, dt) else self.shk.r = 0 end
+    if math.abs(self.shk.z) > 0.1 then self.shk.z = _smooth(self.shk.z, 0, 5, dt) else self.shk.z = 0 end
 end
 
 function Camera:draw(func)
@@ -40,9 +44,10 @@ function Camera:draw(func)
     lg.setScissor(self.x, self.y, self.w, self.h)
     lg.push()
     lg.translate(cx, cy)
-    lg.scale(self.cam.s)
-    lg.rotate(self.cam.r)
+    lg.scale(self.cam.s + (math.random()-.5)*self.shk.z)
+    lg.rotate(self.cam.r + (math.random()-.5)*self.shk.r)
     lg.translate(-self.cam.x, -self.cam.y)
+    lg.translate((math.random()-.5)*self.shk.s, (math.random()-.5)*self.shk.s)
         func()
 
         lg.circle("line", self.cam.tx, self.cam.ty, 10)
@@ -57,6 +62,8 @@ function Camera:draw(func)
     lg.line(cx, cy - 10, cx, cy + 10)
 end
 
+
+function Camera:shake(s, r, z) self.shk.s, self.shk.r, self.shk.z = s or 0 ,r or 0 ,z or 0 end
 function Camera:move(x, y) self.cam.tx, self.cam.ty = self.cam.tx + x, self.cam.ty - y end
 function Camera:zoom(s) self.cam.s = self.cam.s + s end
 function Camera:rotate(r) self.cam.r = self.cam.r + r end
