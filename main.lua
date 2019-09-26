@@ -6,8 +6,8 @@ function love.load()
     W, H = love.graphics.getDimensions()
     worldmap = lg.newImage("world.png")
 
-    cam1 = Camera:new(0, 0, W/2, H, 0, 0.5)
-    cam2 = Camera:new(W/2, 0, W/2, H/2, 0.2, 1)
+    cam2 = Camera:new(0, 0, W/2, H, 0, 1)
+    cam1 = Camera:new(W/2, 0, W/2, H/2, 0, 0.8)
     cam3 = Camera:new(W/2,  H/2, W/2, H/2, 0.2, 0.2)
 
     cam1:setMode("smooth")
@@ -15,7 +15,6 @@ function love.load()
 end
 
 function love.update(dt)
-    -- dt = dt * 0.5
 
     cam1:update(dt)
     cam2:update(dt)
@@ -29,8 +28,8 @@ function love.update(dt)
     if love.keyboard.isDown("a") then cam1:zoom(2) end
     if love.keyboard.isDown("q") then cam1:zoom(0.5) end
 
-    if love.keyboard.isDown("x") then cam1:setAngle(dt) end
-    if love.keyboard.isDown("w") then cam1:setAngle(-dt) end
+    if love.keyboard.isDown("x") then cam1:setAngle(0.2) end
+    if love.keyboard.isDown("w") then cam1:setAngle(-0.5) end
 
     if love.keyboard.isDown("1") then cam1:shake(50) end
     if love.keyboard.isDown("2") then cam1:shake(_, 1) end
@@ -47,10 +46,15 @@ function love.draw()
     cam2:draw(draw_func)
     cam3:draw(draw_func)
 
-    lg.print(cam1:getX() .. "\n" .. cam1:getY().. "\n" .. cam1:getScale())
+
+    local _x, _y = cam1:camToScreen(0, 0)
+    lg.print(_x .. "\n" .. _y)
+
+    -- lg.print(cam1:getX() .. "\n" .. cam1:getY().. "\n" .. cam1:getScale())
 end
 
 
 function draw_func()
     lg.draw(worldmap, 0, 0)
+    lg.rectangle("line", 0, 0, 800, 600)
 end

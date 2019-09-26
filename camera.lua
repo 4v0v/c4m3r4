@@ -12,7 +12,7 @@ function Camera:new(x, y, w, h, r, s)
         obj.r = r or 0
         obj.s = s or 1
         obj.cam = { x = 0, y = 0, r = r or 0, s = s or 1, tx = 0, ty = 0, ts = s or 1, m = "default", sm = "default", sv = 10, ssv = 10 }
-        obj.shk = { s = 0, r = 0, z = 0 }
+        obj.shk = { s = 0, r = 0, z = 0, amount = 1/60, t = 0, xrs = 0, yrs = 0, rr = 0, rz = 0 }
     return setmetatable(obj, {__index = Camera})
 end
 
@@ -21,6 +21,15 @@ function Camera:update(dt)
     elseif self.cam.m == "smooth"   then self.cam.x, self.cam.y = _smooth(self.cam.x, self.cam.tx, self.cam.sv, dt), _smooth(self.cam.y, self.cam.ty, self.cam.sv, dt) end
     if     self.cam.sm == "default" then self.cam.s = self.cam.ts
     elseif self.cam.sm == "smooth"  then self.cam.s = _smooth(self.cam.s, self.cam.ts, self.cam.ssv, dt) end
+
+    self.shk.t = self.shk.t + dt 
+    if self.shk.t > self.shk.amount then 
+        if self.shk.s ~= 0 then self.shk.xrs = _rand()*self.shk.s else self.shk.xrs = 0 end
+        if self.shk.s ~= 0 then self.shk.yrs = _rand()*self.shk.s else self.shk.yrs = 0 end
+        if self.shk.r ~= 0 then self.shk.rr = _rand()*self.shk.r else self.shk.rr = 0 end
+        if self.shk.z ~= 0 then self.shk.rz = _rand()*self.shk.z else self.shk.rz = 0 end
+        self.shk.t = self.shk.t - self.shk.amount
+    end
     if math.abs(self.shk.s) > 5   then self.shk.s = _smooth(self.shk.s, 0, 5, dt) else self.shk.s = 0 end
     if math.abs(self.shk.r) > 0.1 then self.shk.r = _smooth(self.shk.r, 0, 5, dt) else self.shk.r = 0 end
     if math.abs(self.shk.z) > 0.1 then self.shk.z = _smooth(self.shk.z, 0, 5, dt) else self.shk.z = 0 end
@@ -31,10 +40,10 @@ function Camera:draw(func)
     lg.setScissor(self.x, self.y, self.w, self.h)
     lg.push()
     lg.translate(cx, cy)
-    lg.scale(self.cam.s + _rand()*self.shk.z)
-    lg.rotate(self.cam.r + _rand()*self.shk.r)
+    lg.scale(self.cam.s + self.shk.rz)
+    lg.rotate(self.cam.r + self.shk.rr)
     lg.translate(-self.cam.x, -self.cam.y)
-    lg.translate(_rand()*self.shk.s, _rand()*self.shk.s)
+    lg.translate(self.shk.xrs, self.shk.yrs)
         func()
         lg.circle("line", self.cam.tx, self.cam.ty, 10)
         lg.line(self.cam.tx - 10, self.cam.ty, self.cam.tx + 10, self.cam.ty)
@@ -73,7 +82,15 @@ function Camera:setX(x) self.cam.x, self.cam.tx = x or self.cam.x, x or self.cam
 function Camera:setY(y) self.cam.y, self.cam.ty = y or self.cam.y, y or self.cam.ty end
 
 function Camera:screenToCam(x, y) end
-function Camera:camToScreen(x, y) end
+function Camera:camToScreen(x, y)
+    local _c, _s = math.cos(self.cam.r), math.sin(self.cam.r)
+    local _x = (x - self.cam.x) * _c - (y - self.cam.y) * _s 
+    local _y = (y - self.cam.y) * _c + (x - self.cam.x) * _s 
+    _x, _y = _x * self.cam.s, _y * self.cam.s
+    _x, _y = _x + self.x + self.w/2,  _y + self.y + self.h/2
+    return _x, _y
+end
+
 function Camera:getMousePosition() return self:camToScreen(love.mouse.getPosition()) end
 
 return Camera
